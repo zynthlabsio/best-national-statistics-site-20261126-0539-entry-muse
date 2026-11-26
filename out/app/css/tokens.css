@@ -1,0 +1,48 @@
+/* tokens.css — the shared design tokens: palette, type scale, spacing.
+   Both sites in this family read their colours and rhythm from variables
+   like these; this statistics site wears the "civic teal" theme. */
+
+:root {
+  --ink: #10222e;
+  --ink-soft: #3d5566;
+  --paper: #f6f3ec;
+  --card: #fffdf8;
+  --line: #ddd5c3;
+  --accent: #0e7c7b;
+  --accent-deep: #095e5d;
+  --accent-soft: #dceeed;
+  --amber: #dd8f26;
+  --red: #c0452f;
+  --green: #2e7d4f;
+  --radius: 14px;
+  --font-data: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-data);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; }
+p { margin: 0; }
+a { color: var(--accent-deep); }
+
+.numbers { font-variant-numeric: tabular-nums; }
+
+.skip-link {
+  position: absolute; left: -999px; top: 0;
+  background: var(--ink); color: #fff; padding: 0.6rem 1rem; z-index: 20;
+}
+.skip-link:focus { left: 0.5rem; top: 0.5rem; }
+
+:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
