@@ -1,39 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Indonesia in Numbers — National Statistics</title>
-<meta name="description" content="Indonesia's official-style statistics in one place: population, economy, regions and society — every figure with its source and year.">
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Indonesia in Numbers — sourced national statistics for Indonesia: population, the economy, provinces, jobs, prices and trade.">
+  <title>Indonesia in Numbers — Sourced National Statistics</title>
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header">
-  <div class="header-inner">
-    <a class="brand" href="#/overview" aria-label="Indonesia in Numbers — home">
-      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="22" width="7" height="13" rx="1.5"/><rect x="16.5" y="15" width="7" height="20" rx="1.5"/><rect x="29" y="6" width="7" height="29" rx="1.5"/></svg>
-      <span class="brand-text">Indonesia<em> in Numbers</em></span>
-    </a>
-    <p class="header-tag">National statistics · 38 provinces · figures sourced &amp; dated</p>
-  </div>
-  <nav class="site-nav" aria-label="Sections">
-    <a href="#/overview" data-route="overview">Overview</a>
-    <a href="#/people" data-route="people">People</a>
-    <a href="#/economy" data-route="economy">Economy</a>
-    <a href="#/regions" data-route="regions">Regions</a>
-    <a href="#/sources" data-route="sources">Sources &amp; methods</a>
-  </nav>
-</header>
-<main id="main" class="page" tabindex="-1"></main>
-<footer class="site-footer">
-  <p><strong>Indonesia in Numbers</strong> is an independent statistics showcase. Figures are published estimates from
-  Statistics Indonesia (BPS), the World Bank, UNDP and APJII, each labelled with its source and year.
-  Rounded for readability; the sources page lists definitions and release dates.</p>
-  <p class="footer-line">Population 281.6 million (BPS, mid-2024) · GDP Rp 22,139 trillion (BPS, 2024) · Poverty 8.57% (BPS, Sep 2024)</p>
-</footer>
-<script type="module" src="js/main.js"></script>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#/overview"><span class="brand-mark" aria-hidden="true"></span>Indonesia in Numbers</a>
+      <p class="site-tagline">Sourced national statistics, every figure dated</p>
+      <nav class="site-nav" aria-label="Sections">
+        <ul>
+          <li><a href="#/overview" data-nav="overview">Overview</a></li>
+          <li><a href="#/people" data-nav="people">People &amp; society</a></li>
+          <li><a href="#/economy" data-nav="economy">The economy</a></li>
+          <li><a href="#/regions" data-nav="regions">Regions &amp; provinces</a></li>
+          <li><a href="#/sources" data-nav="sources">Sources &amp; methods</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap" aria-live="polite"></main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Indonesia in Numbers is an independent statistics reference. Figures are rounded and may differ in the last digit from the releases they come from. Every figure on this site names its publisher and year.</p>
+      <p>Publishers: Statistics Indonesia (BPS) · World Bank · UNDP · APJII</p>
+      <nav aria-label="Footer">
+        <a href="#/overview">Overview</a>
+        <a href="#/people">People &amp; society</a>
+        <a href="#/economy">The economy</a>
+        <a href="#/regions">Regions &amp; provinces</a>
+        <a href="#/sources">Sources &amp; methods</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

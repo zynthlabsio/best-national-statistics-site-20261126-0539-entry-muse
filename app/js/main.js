@@ -1,40 +1,77 @@
-// main.js — the router. Each section is its own module, loaded lazily with
-// import() the first time its link is followed, so the first load carries
-// only the shell, the styles and this file. Hash routes keep every section
-// reachable by a link and bookmarkable, with no server and no network.
+// main.js — the site's router. Hash routes lazy-load one view module
+// per section on first visit, set the page title, scroll to the top and
+// signal window.__shotReady once the view has rendered.
 
-const routes = {
-  overview: () => import("./view-overview.js").then((m) => m.renderOverview),
-  people: () => import("./view-people.js").then((m) => m.renderPeople),
-  economy: () => import("./view-economy.js").then((m) => m.renderEconomy),
-  regions: () => import("./view-regions.js").then((m) => m.renderRegions),
-  sources: () => import("./view-sources.js").then((m) => m.renderSources),
+const ROUTES = {
+  overview: {
+    title: 'Indonesia in Numbers — Overview',
+    load: () => import('./view-overview.js'),
+  },
+  people: {
+    title: 'Indonesia in Numbers — People & society',
+    load: () => import('./view-people.js'),
+  },
+  economy: {
+    title: 'Indonesia in Numbers — The economy',
+    load: () => import('./view-economy.js'),
+  },
+  regions: {
+    title: 'Indonesia in Numbers — Regions & provinces',
+    load: () => import('./view-regions.js'),
+  },
+  sources: {
+    title: 'Indonesia in Numbers — Sources & methods',
+    load: () => import('./view-sources.js'),
+  },
 };
 
-const titles = {
-  overview: "Indonesia in Numbers — National Statistics",
-  people: "People & society — Indonesia in Numbers",
-  economy: "The economy — Indonesia in Numbers",
-  regions: "Regions & provinces — Indonesia in Numbers",
-  sources: "Sources & methods — Indonesia in Numbers",
-};
+/** Chart redraw callbacks registered by the current view; run on resize. */
+let redrawCallbacks = [];
 
-const main = document.querySelector("#main");
-const loaded = {};
+export function onResizeRedraw(draw) {
+  redrawCallbacks.push(draw);
+}
 
-async function navigate() {
-  const name = (location.hash.replace(/^#\//, "") || "overview").split("?")[0];
-  const route = routes[name] ? name : "overview";
-  document.querySelectorAll(".site-nav a").forEach((a) => {
-    if (a.dataset.route === route) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
+window.addEventListener('resize', () => {
+  window.clearTimeout(window.__resizeTimer);
+  window.__resizeTimer = window.setTimeout(() => {
+    redrawCallbacks.forEach((draw) => {
+      try { draw(); } catch (err) { /* a hidden view redraws nothing */ }
+    });
+  }, 160);
+});
+
+function routeName() {
+  const hash = window.location.hash.replace(/^#\/?/, '').split('?')[0];
+  return ROUTES[hash] ? hash : 'overview';
+}
+
+function markNav(name) {
+  document.querySelectorAll('[data-nav]').forEach((link) => {
+    if (link.getAttribute('data-nav') === name) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
   });
-  if (!loaded[route]) loaded[route] = await routes[route]();
-  loaded[route](main);
-  document.title = titles[route];
+}
+
+async function render() {
+  const name = routeName();
+  const route = ROUTES[name];
+  window.__shotReady = false;
+  redrawCallbacks = [];
+  const main = document.getElementById('main');
+  try {
+    const view = await route.load();
+    main.innerHTML = '';
+    view.render(main);
+  } catch (err) {
+    main.innerHTML = '<section class="panel"><h1>Something went wrong</h1>'
+      + '<p>This section could not be loaded. Please try another section from the navigation above.</p></section>';
+  }
+  document.title = route.title;
+  markNav(name);
   window.scrollTo(0, 0);
   window.__shotReady = true;
 }
 
-window.addEventListener("hashchange", navigate);
-navigate();
+window.addEventListener('hashchange', render);
+render();

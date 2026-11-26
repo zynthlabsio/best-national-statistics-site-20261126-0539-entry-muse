@@ -1,78 +1,130 @@
-// view-regions.js — the provinces compared: a searchable, sortable table
-// of the sixteen most populous provinces and a ranked bar view of the top
-// five. Sorting and filtering happen here, in the page, with no reload.
+// view-regions.js — the Regions & provinces route: the five largest
+// provinces as horizontal bars, and a searchable, sortable table of
+// the sixteen largest provinces.
 
-import { provinces } from "./data-country.js";
-import { oneDecimal, whole, escapeHtml } from "./format.js";
+import { PROVINCES, PROVINCE_TOTALS } from './data-country.js';
+import { formatWhole, formatOneDecimal, escapeHtml } from './format.js';
 
-let sortKey = "population";
-let sortDir = -1;
-let query = "";
+const COLUMNS = [
+  { key: 'province', label: 'Province', numeric: false },
+  { key: 'capital', label: 'Capital', numeric: false },
+  { key: 'population', label: 'Population in millions', numeric: true },
+  { key: 'density', label: 'Density per km²', numeric: true },
+];
 
-function sortedRows() {
-  const rows = provinces.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
+let query = '';
+let sortKey = 'population';
+let sortDir = 'desc';
+
+function filteredRows() {
+  const needle = query.trim().toLowerCase();
+  const rows = PROVINCES.filter((row) => row.province.toLowerCase().includes(needle));
+  const column = COLUMNS.find((c) => c.key === sortKey);
   rows.sort((a, b) => {
-    const av = a[sortKey], bv = b[sortKey];
-    return (typeof av === "string" ? av.localeCompare(bv) : av - bv) * sortDir;
+    const av = a[sortKey];
+    const bv = b[sortKey];
+    const cmp = column.numeric ? av - bv : String(av).localeCompare(String(bv));
+    return sortDir === 'asc' ? cmp : -cmp;
   });
   return rows;
 }
 
-function tableHtml() {
-  const head = (key, label, numeric = false) =>
-    `<th${numeric ? ' class="n"' : ""}><button type="button" class="sort" data-sort="${key}">${label}</button></th>`;
-  return `<table class="data">
-    <thead><tr>${head("name", "Province")}${head("capital", "Capital")}${head("population", "Population (m)", true)}${head("density", "Density /km²", true)}</tr></thead>
-    <tbody>${sortedRows().map((p) => `<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>${escapeHtml(p.capital)}</td><td class="n">${oneDecimal(p.population)}</td><td class="n">${whole(p.density)}</td></tr>`).join("")}</tbody>
-  </table>`;
+function tableRows(rows) {
+  return rows.map((row) => '<tr>'
+    + `<td>${escapeHtml(row.province)}</td>`
+    + `<td>${escapeHtml(row.capital)}</td>`
+    + `<td class="num">${formatOneDecimal(row.population)}</td>`
+    + `<td class="num">${formatWhole(row.density)}</td>`
+    + '</tr>').join('');
 }
 
-export function renderRegions(main) {
-  const top5 = [...provinces].sort((a, b) => b.population - a.population).slice(0, 5);
-  const max = top5[0].population;
-  main.innerHTML = `
-  <h1 class="section-title">Regions &amp; provinces</h1>
-  <p class="section-lede">Indonesia has 38 provinces. The three Javanese provinces in this table
-  alone hold 130.6 million people — more than all but a handful of countries. Jakarta is the
-  densest province at about 16,100 people per km²; East Kalimantan the sparsest here at 33.</p>
+function topFiveBars() {
+  const top = [...PROVINCES].sort((a, b) => b.population - a.population).slice(0, 5);
+  const max = top[0].population;
+  return top.map((row) => '<li>'
+    + `<span class="bar-name">${escapeHtml(row.province)}</span>`
+    + `<span class="bar-track"><span class="bar-fill" style="width:${((row.population / max) * 100).toFixed(1)}%"></span></span>`
+    + `<span class="bar-value">${formatOneDecimal(row.population)}m</span>`
+    + '</li>').join('');
+}
 
-  <section class="panel">
-    <h2>The five largest provinces</h2>
-    <p class="panel-sub">Population, millions, mid-2024 estimate.</p>
-    ${top5.map((p) => `<div class="hbar-row"><span>${escapeHtml(p.name)}</span><span class="hbar-track"><span class="hbar-fill" style="display:block;width:${(p.population / max) * 100}%"></span></span><span class="hbar-val numbers">${oneDecimal(p.population)}m</span></div>`).join("")}
-    <p class="source-note">Source: BPS, population by province, mid-2024 estimates.</p>
-  </section>
+export function render(main) {
+  main.innerHTML = ''
+    + '<section aria-labelledby="page-title">'
+    + '<p class="eyebrow">Regions &amp; provinces</p>'
+    + '<h1 id="page-title">Half the country lives on Java.</h1>'
+    + '<p class="lede">Indonesia has 38 provinces, but the population is far from evenly spread. '
+    + 'The three Javanese provinces alone hold 130.6 million people, and Jakarta is the densest place in the country '
+    + 'at about 16,100 people per km² — against 33 per km² in East Kalimantan, the sparsest of the sixteen largest.</p>'
+    + '</section>'
 
-  <section class="panel">
-    <h2>Compare the sixteen largest provinces</h2>
-    <p class="panel-sub">Search by name, or sort by any column. Together these sixteen hold
-    248.4 million people — 88% of the country.</p>
-    <div class="controls">
-      <label for="province-search">Search provinces</label>
-      <input type="search" id="province-search" placeholder="e.g. Java, Bali, Sumatra…" autocomplete="off">
-      <span id="province-count" role="status"></span>
-    </div>
-    <div id="province-table"></div>
-    <p class="source-note">Source: BPS mid-2024 provincial estimates; population and density rounded. The remaining 22 provinces each hold under 3.5 million people.</p>
-  </section>`;
+    + '<section class="panel" aria-labelledby="top-title">'
+    + '<div class="panel-head"><div><h2 id="top-title">The five largest provinces</h2>'
+    + '<p>Population in millions, mid-2024 estimates. West Java alone holds more people than most countries.</p></div></div>'
+    + '<ul class="bar-list">' + topFiveBars() + '</ul>'
+    + '<p class="source-note">Source: BPS mid-2024 estimates.</p>'
+    + '</section>'
 
-  const tableBox = main.querySelector("#province-table");
-  const count = main.querySelector("#province-count");
-  const paint = () => {
-    tableBox.innerHTML = tableHtml();
-    count.textContent = `${sortedRows().length} of ${provinces.length} provinces`;
-    tableBox.querySelectorAll("[data-sort]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const key = button.dataset.sort;
-        if (key === sortKey) sortDir = -sortDir;
-        else { sortKey = key; sortDir = key === "name" || key === "capital" ? 1 : -1; }
-        paint();
-      });
+    + '<section class="panel" aria-labelledby="table-title">'
+    + '<div class="panel-head"><div><h2 id="table-title">Sixteen largest provinces</h2>'
+    + '<p>Search by name, or click a column header to sort — click again to reverse the order.</p></div></div>'
+    + '<div class="field-row">'
+    + '<label for="province-search">Search provinces</label>'
+    + '<input type="search" id="province-search" placeholder="Type a province name, e.g. Bali" autocomplete="off">'
+    + '<p class="count-line" id="province-count" aria-live="polite"></p>'
+    + '</div>'
+    + '<div class="table-scroll"><table class="data-table" id="province-table">'
+    + '<caption>Mid-2024 estimates, population in millions and density in people per km².</caption>'
+    + '<thead><tr>'
+    + COLUMNS.map((c) => `<th scope="col" class="sortable${c.numeric ? ' num' : ''}" data-sort="${c.key}" tabindex="0">${escapeHtml(c.label)}</th>`).join('')
+    + '</tr></thead>'
+    + '<tbody></tbody>'
+    + '</table></div>'
+    + `<p class="source-note">Source: BPS mid-2024 estimates. The sixteen together hold ${PROVINCE_TOTALS.topSixteenPopulation} million people — ${PROVINCE_TOTALS.topSixteenShare}% of the country.</p>`
+    + '</section>';
+
+  const search = main.querySelector('#province-search');
+  const count = main.querySelector('#province-count');
+  const tbody = main.querySelector('#province-table tbody');
+  const headers = [...main.querySelectorAll('#province-table th[data-sort]')];
+
+  function refresh() {
+    const rows = filteredRows();
+    tbody.innerHTML = tableRows(rows);
+    count.textContent = `${rows.length} of ${PROVINCES.length} provinces`;
+    headers.forEach((th) => {
+      th.classList.remove('sorted-asc', 'sorted-desc');
+      if (th.getAttribute('data-sort') === sortKey) {
+        th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      }
     });
-  };
-  paint();
-  main.querySelector("#province-search").addEventListener("input", (event) => {
-    query = event.target.value;
-    paint();
+  }
+
+  search.addEventListener('input', () => {
+    query = search.value;
+    refresh();
   });
+
+  headers.forEach((th) => {
+    const applySort = () => {
+      const key = th.getAttribute('data-sort');
+      const column = COLUMNS.find((c) => c.key === key);
+      if (key === sortKey) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortKey = key;
+        sortDir = column.numeric ? 'desc' : 'asc';
+      }
+      refresh();
+    };
+    th.addEventListener('click', applySort);
+    th.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        applySort();
+      }
+    });
+  });
+
+  refresh();
 }

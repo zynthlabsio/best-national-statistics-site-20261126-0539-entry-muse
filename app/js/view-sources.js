@@ -1,50 +1,59 @@
-// view-sources.js — sources & methods: where every figure comes from,
-// how it is defined, and when it is released. This page is what makes the
-// numbers elsewhere on the site checkable.
+// view-sources.js — the Sources & methods route: who publishes the
+// figures, what the terms mean, and how often each series is released.
 
-export function renderSources(main) {
-  main.innerHTML = `
-  <h1 class="section-title">Sources &amp; methods</h1>
-  <p class="section-lede">Every figure on this site is a published estimate. This page names the
-  publisher, the series and the reference period for each one, so any number here can be traced
-  back to its release.</p>
+import { PUBLISHERS, DEFINITIONS, RELEASE_RHYTHM } from './data-country.js';
+import { escapeHtml } from './format.js';
 
-  <section class="panel">
-    <h2>The sources</h2>
-    <table class="data">
-      <thead><tr><th>Publisher</th><th>Series used</th><th>Used for</th></tr></thead>
-      <tbody>
-        <tr><td><strong>BPS — Statistics Indonesia</strong></td><td>Population censuses 1971–2020; mid-year estimates; Susenas; Sakernas; national accounts; CPI; foreign trade</td><td>Population, poverty, jobs, GDP, prices, trade, provinces</td></tr>
-        <tr><td><strong>World Bank</strong></td><td>World Development Indicators</td><td>GDP per capita, life expectancy</td></tr>
-        <tr><td><strong>UNDP</strong></td><td>Human Development Report 2023–24</td><td>Human Development Index and rank</td></tr>
-        <tr><td><strong>APJII</strong></td><td>Indonesia internet penetration survey 2024</td><td>Internet users</td></tr>
-      </tbody>
-    </table>
-  </section>
+function publisherRows() {
+  return PUBLISHERS.map((row) => '<tr>'
+    + `<td><strong>${escapeHtml(row.publisher)}</strong></td>`
+    + `<td>${escapeHtml(row.series)}</td>`
+    + `<td>${escapeHtml(row.usedFor)}</td>`
+    + '</tr>').join('');
+}
 
-  <div class="grid grid-2">
-    <section class="panel">
-      <h2>Definitions</h2>
-      <ul class="fact-list">
-        <li><strong>Poverty rate</strong> — share of the population whose monthly spending per person falls below the BPS poverty line (food and non-food basic needs).</li>
-        <li><strong>Open unemployment</strong> — share of the labour force not working but available for and seeking work, measured each February and August (Sakernas).</li>
-        <li><strong>GDP growth</strong> — change in GDP at constant 2010 prices, year on year.</li>
-        <li><strong>Inflation</strong> — change in the consumer price index across 150 cities, year on year.</li>
-        <li><strong>Mid-year population</strong> — BPS estimate for 30 June, projected from the 2020 census and vital statistics.</li>
-      </ul>
-    </section>
-    <section class="panel">
-      <h2>Release rhythm</h2>
-      <ul class="fact-list">
-        <li><strong>GDP</strong> — quarterly, about five weeks after the quarter ends</li>
-        <li><strong>Inflation &amp; trade</strong> — monthly, on the first working day</li>
-        <li><strong>Jobs</strong> — twice a year, February and August rounds</li>
-        <li><strong>Poverty</strong> — twice a year, March and September rounds</li>
-        <li><strong>Population</strong> — mid-year estimate every year; census every ten years (next: 2030)</li>
-      </ul>
-      <p class="source-note">Figures on this site are rounded for readability and may differ in the
-      last digit from the releases. Where an estimate has been revised by its publisher, the
-      revised figure is the one shown.</p>
-    </section>
-  </div>`;
+function definitionItems() {
+  return DEFINITIONS.map((d) => `<dt>${escapeHtml(d.term)}</dt><dd>${escapeHtml(d.text)}</dd>`).join('');
+}
+
+function rhythmItems() {
+  return RELEASE_RHYTHM.map((r) => `<li><strong>${escapeHtml(r.release)}:</strong> ${escapeHtml(r.rhythm)}</li>`).join('');
+}
+
+export function render(main) {
+  main.innerHTML = ''
+    + '<section aria-labelledby="page-title">'
+    + '<p class="eyebrow">Sources &amp; methods</p>'
+    + '<h1 id="page-title">Where every figure comes from.</h1>'
+    + '<p class="lede">Four publishers supply every number on this site. Statistics Indonesia (BPS) '
+    + 'does most of the work — censuses, surveys and the national accounts — while the World Bank, '
+    + 'UNDP and APJII supply the international and connectivity figures.</p>'
+    + '</section>'
+
+    + '<section class="panel" aria-labelledby="publishers-title">'
+    + '<div class="panel-head"><div><h2 id="publishers-title">Publishers</h2>'
+    + '<p>Each figure on the site names its publisher and year; this table is the full list behind those notes.</p></div></div>'
+    + '<div class="table-scroll"><table class="data-table">'
+    + '<thead><tr><th scope="col">Publisher</th><th scope="col">Series used</th><th scope="col">Used for</th></tr></thead>'
+    + '<tbody>' + publisherRows() + '</tbody>'
+    + '</table></div>'
+    + '</section>'
+
+    + '<div class="grid-two">'
+    + '<section class="panel" aria-labelledby="definitions-title">'
+    + '<div class="panel-head"><div><h2 id="definitions-title">Definitions</h2>'
+    + '<p>What the terms on this site actually mean.</p></div></div>'
+    + '<dl class="def-list">' + definitionItems() + '</dl>'
+    + '</section>'
+
+    + '<section class="panel" aria-labelledby="rhythm-title">'
+    + '<div class="panel-head"><div><h2 id="rhythm-title">Release rhythm</h2>'
+    + '<p>How often each series is published — so you know when a figure will next move.</p></div></div>'
+    + '<ul class="rhythm-list">' + rhythmItems() + '</ul>'
+    + '</section>'
+    + '</div>'
+
+    + '<p class="rounding-note"><strong>A note on rounding.</strong> Figures on this site are rounded and may differ in the last digit from the releases they come from. '
+    + 'Population counts are estimates: the mid-year figure is the BPS estimate for 30 June, projected from the 2020 census and vital statistics. '
+    + 'The next census is in 2030.</p>';
 }

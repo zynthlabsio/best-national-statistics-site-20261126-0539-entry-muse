@@ -1,49 +1,58 @@
-// view-people.js — population & society: the age pyramid, poverty and
-// wellbeing trends, and the facts behind the headline numbers.
+// view-people.js — the People & society route: the 2024 age pyramid,
+// the poverty-rate line chart, and nine facts about Indonesian society.
 
-import { agePyramid, povertySeries } from "./data-country.js";
-import { pyramidChart, lineChart } from "./charts.js";
+import { AGE_PYRAMID, POVERTY_RATE, PEOPLE_FACTS } from './data-country.js';
+import { drawPyramidChart, drawLineChart, AMBER } from './charts.js';
+import { escapeHtml } from './format.js';
+import { onResizeRedraw } from './main.js';
 
-export function renderPeople(main) {
-  main.innerHTML = `
-  <h1 class="section-title">People &amp; society</h1>
-  <p class="section-lede">281.6 million people, a median age of 30.4 years, and a demographic
-  dividend that peaks this decade: two of every three Indonesians are of working age.</p>
+function factItem(fact) {
+  const source = fact.year ? `${fact.source} · ${fact.year}` : fact.source;
+  return '<li><span class="fact-mark" aria-hidden="true"></span><span>'
+    + `${escapeHtml(fact.text)}<span class="fact-source">Source: ${escapeHtml(source)}</span></span></li>`;
+}
 
-  <section class="panel">
-    <h2>The age pyramid, 2024</h2>
-    <p class="panel-sub">Share of the population in each five-year age group, men on the left,
-    women on the right. The wide base is narrowing — the 0–4 group is smaller than the 20–24
-    group for the first time — while the top keeps growing.</p>
-    <div class="chart-frame"><canvas id="pyramid-chart" role="img" aria-label="Population pyramid for 2024: the largest groups are aged 20 to 24 at about 8.4 per cent of the population combined"></canvas></div>
-    <p class="source-note">Source: BPS population projection by age and sex, 2024. Shares are per cent of the total population.</p>
-  </section>
+export function render(main) {
+  main.innerHTML = ''
+    + '<section aria-labelledby="page-title">'
+    + '<p class="eyebrow">People &amp; society</p>'
+    + '<h1 id="page-title">A young country, slowly ageing.</h1>'
+    + '<p class="lede">One in four Indonesians is under 15, the median age is 30.4, and the '
+    + 'population pyramid still has a wide base — but the top is widening every census. '
+    + 'Poverty, meanwhile, is at its lowest on the series.</p>'
+    + '</section>'
 
-  <div class="grid grid-2">
-    <section class="panel">
-      <h2>Poverty is falling again</h2>
-      <p class="panel-sub">Share of the population below the national poverty line each September.
-      The pandemic pushed the rate back above 10% in 2020; by September 2024 it reached 8.57%,
-      the lowest on this series — 24.06 million people.</p>
-      <div class="chart-frame"><canvas id="poverty-chart" role="img" aria-label="Line chart of the poverty rate falling from 11.13 per cent in 2015 to 8.57 per cent in 2024, with a rise in 2020"></canvas></div>
-      <p class="source-note">Source: BPS, National Socio-Economic Survey (Susenas), September rounds.</p>
-    </section>
-    <section class="panel">
-      <h2>Society in facts</h2>
-      <ul class="fact-list">
-        <li><strong>30.4 years</strong> — median age of the population (BPS, 2024)</li>
-        <li><strong>71.9 years</strong> — life expectancy at birth (World Bank, 2023)</li>
-        <li><strong>58.6%</strong> — live in urban areas, up from 17.4% in 1971 (BPS, 2024)</li>
-        <li><strong>2.1 children</strong> — total fertility rate per woman (BPS, 2023)</li>
-        <li><strong>96.5%</strong> — adult literacy rate (BPS, 2024)</li>
-        <li><strong>8.9 years</strong> — mean years of schooling for adults (BPS, 2024)</li>
-        <li><strong>0.728</strong> — Human Development Index, rank 112 of 193 (UNDP, 2023)</li>
-        <li><strong>79.5%</strong> — of the population use the internet (APJII, 2024)</li>
-        <li><strong>700+</strong> — living local languages, the most of any country but one (BPS / Ethnologue)</li>
-      </ul>
-    </section>
-  </div>`;
+    + '<section class="panel" aria-labelledby="pyramid-title">'
+    + '<div class="panel-head"><div><h2 id="pyramid-title">Who lives here, by age</h2>'
+    + '<p>Population pyramid, 2024. Each bar is the share of the total population in that five-year age group — men to the left, women to the right.</p></div></div>'
+    + '<div class="chart-wrap"><canvas id="pyramid-chart" height="430" aria-label="Population pyramid for 2024, men on the left and women on the right" role="img"></canvas></div>'
+    + '<p class="source-note">Source: BPS population projection, 2024. The youngest groups are still the largest; the 75+ group is the smallest, at 0.9% men and 1.3% women.</p>'
+    + '</section>'
 
-  pyramidChart(main.querySelector("#pyramid-chart"), agePyramid);
-  lineChart(main.querySelector("#poverty-chart"), povertySeries, { color: "#c0452f", unit: "%" });
+    + '<section class="panel" aria-labelledby="poverty-title">'
+    + '<div class="panel-head"><div><h2 id="poverty-title">Poverty is falling — slowly</h2>'
+    + '<p>Poverty rate in September each year. It rose during the pandemic, then fell to 8.57% in September 2024, the lowest on this series — 24.06 million people.</p></div></div>'
+    + '<div class="chart-wrap"><canvas id="poverty-chart" height="260" aria-label="Line chart of the poverty rate, 2015 to 2024" role="img"></canvas></div>'
+    + '<p class="source-note">Source: BPS Susenas, September rounds. The poverty line is the monthly spending per person below which a person counts as poor.</p>'
+    + '</section>'
+
+    + '<section class="panel" aria-labelledby="facts-title">'
+    + '<div class="panel-head"><div><h2 id="facts-title">Society in facts</h2>'
+    + '<p>Nine numbers that describe the people behind the totals.</p></div></div>'
+    + '<ul class="fact-list">' + PEOPLE_FACTS.map(factItem).join('') + '</ul>'
+    + '</section>';
+
+  const pyramidCanvas = main.querySelector('#pyramid-chart');
+  const drawPyramid = () => drawPyramidChart(pyramidCanvas, AGE_PYRAMID, {});
+  drawPyramid();
+  onResizeRedraw(drawPyramid);
+
+  const povertyCanvas = main.querySelector('#poverty-chart');
+  const drawPoverty = () => drawLineChart(
+    povertyCanvas,
+    POVERTY_RATE.map((p) => ({ label: String(p.year), value: p.value })),
+    { color: AMBER, unit: '%', decimals: 2 },
+  );
+  drawPoverty();
+  onResizeRedraw(drawPoverty);
 }

@@ -1,47 +1,62 @@
-// view-economy.js — the economy: growth, prices, jobs and trade, each
-// chart with the release it came from.
+// view-economy.js — the Economy route: the GDP growth bar chart with
+// the pandemic year in red, the December inflation line, and eight
+// facts about work and trade.
 
-import { gdpGrowthSeries, inflationSeries } from "./data-country.js";
-import { barChart, lineChart } from "./charts.js";
+import { GDP_GROWTH, INFLATION_DECEMBER, ECONOMY_FACTS } from './data-country.js';
+import { drawBarChart, drawLineChart, AMBER, RED } from './charts.js';
+import { escapeHtml } from './format.js';
+import { onResizeRedraw } from './main.js';
 
-export function renderEconomy(main) {
-  main.innerHTML = `
-  <h1 class="section-title">The economy</h1>
-  <p class="section-lede">A US$ 1.4 trillion economy growing at about 5% a year, with inflation
-  back inside the central bank's 2.5% ± 1 target band and a trade surplus in every year since 2020.</p>
+function factItem(fact) {
+  return '<li><span class="fact-mark" aria-hidden="true"></span><span>'
+    + `${escapeHtml(fact.text)}<span class="fact-source">Source: ${escapeHtml(fact.source)} · ${escapeHtml(fact.year)}</span></span></li>`;
+}
 
-  <section class="panel">
-    <h2>GDP growth, 2015–2024</h2>
-    <p class="panel-sub">Real growth, per cent year on year. The red bar is 2020, the pandemic
-    contraction of −2.07% — the only negative year in the series. Growth in the second quarter
-    of 2025 was 5.12% year on year (BPS).</p>
-    <div class="chart-frame"><canvas id="growth-chart" role="img" aria-label="Bar chart of GDP growth: about 5 per cent every year from 2015 to 2024 except a fall of 2.07 per cent in 2020"></canvas></div>
-    <p class="source-note">Source: BPS, GDP at constant 2010 prices, annual releases 2015–2024.</p>
-  </section>
+export function render(main) {
+  main.innerHTML = ''
+    + '<section aria-labelledby="page-title">'
+    + '<p class="eyebrow">The economy</p>'
+    + '<h1 id="page-title">Growth held at 5.03% in 2024.</h1>'
+    + '<p class="lede">An economy of about US$ 1.4 trillion that has grown near 5% a year for a decade — '
+    + 'with one exception, the pandemic year 2020, when it shrank 2.07%. Inflation is back inside the '
+    + 'central bank\u2019s 2.5% ± 1 target band, and the trade surplus has run every year since 2020.</p>'
+    + '</section>'
 
-  <div class="grid grid-2">
-    <section class="panel">
-      <h2>Inflation, December each year</h2>
-      <p class="panel-sub">Consumer prices, per cent year on year. The 2022 spike to 5.51% followed
-      the subsidised fuel price rise; by December 2024 inflation was 1.57%, the softest in the series.</p>
-      <div class="chart-frame"><canvas id="inflation-chart" role="img" aria-label="Line chart of December inflation peaking at 5.51 per cent in 2022 and easing to 1.57 per cent in 2024"></canvas></div>
-      <p class="source-note">Source: BPS, consumer price index, December releases.</p>
-    </section>
-    <section class="panel">
-      <h2>Work &amp; trade in facts</h2>
-      <ul class="fact-list">
-        <li><strong>4.76%</strong> — open unemployment rate, February 2025 (BPS)</li>
-        <li><strong>143.6 million</strong> — people in work, February 2025 (BPS)</li>
-        <li><strong>59.1%</strong> — of workers are in informal work (BPS, Feb 2025)</li>
-        <li><strong>Rp 3.0 million</strong> — average monthly net wage, approx. (BPS, Feb 2025)</li>
-        <li><strong>US$ 264.7 bn</strong> — exports of goods in 2024 (BPS)</li>
-        <li><strong>US$ 233.7 bn</strong> — imports of goods in 2024 (BPS)</li>
-        <li><strong>US$ 31.0 bn</strong> — trade surplus in 2024, the fifth in a row (BPS)</li>
-        <li><strong>Coal, palm oil, steel</strong> — the three biggest export earners (BPS, 2024)</li>
-      </ul>
-    </section>
-  </div>`;
+    + '<section class="panel" aria-labelledby="growth-title">'
+    + '<div class="panel-head"><div><h2 id="growth-title">GDP growth, year on year</h2>'
+    + '<p>Real GDP growth at constant 2010 prices, 2015–2024. The single red bar is 2020, the only negative year in the decade.</p></div></div>'
+    + '<div class="chart-wrap"><canvas id="growth-chart" height="260" aria-label="Bar chart of GDP growth, 2015 to 2024" role="img"></canvas></div>'
+    + '<p class="source-note">Source: BPS national accounts. Growth picked up again in 2025: GDP in the second quarter of 2025 grew 5.12% year on year (BPS).</p>'
+    + '</section>'
 
-  barChart(main.querySelector("#growth-chart"), gdpGrowthSeries);
-  lineChart(main.querySelector("#inflation-chart"), inflationSeries, { color: "#dd8f26", unit: "%" });
+    + '<section class="panel" aria-labelledby="inflation-title">'
+    + '<div class="panel-head"><div><h2 id="inflation-title">Inflation: the December reading</h2>'
+    + '<p>Consumer price inflation in December, year on year. The 2022 spike to 5.51% followed the fuel-price adjustment; by December 2024 it was 1.57%.</p></div></div>'
+    + '<div class="chart-wrap"><canvas id="inflation-chart" height="260" aria-label="Line chart of December inflation, 2019 to 2024" role="img"></canvas></div>'
+    + '<p class="source-note">Source: BPS consumer price index, across 150 cities. The central bank\u2019s target band is 2.5% ± 1 percentage point.</p>'
+    + '</section>'
+
+    + '<section class="panel" aria-labelledby="facts-title">'
+    + '<div class="panel-head"><div><h2 id="facts-title">Work &amp; trade in facts</h2>'
+    + '<p>Jobs, wages and what the country sells to the world.</p></div></div>'
+    + '<ul class="fact-list">' + ECONOMY_FACTS.map(factItem).join('') + '</ul>'
+    + '</section>';
+
+  const growthCanvas = main.querySelector('#growth-chart');
+  const drawGrowth = () => drawBarChart(
+    growthCanvas,
+    GDP_GROWTH.map((p) => ({ label: String(p.year), value: p.value })),
+    { color: AMBER, negativeColor: RED, unit: '%', decimals: 2 },
+  );
+  drawGrowth();
+  onResizeRedraw(drawGrowth);
+
+  const inflationCanvas = main.querySelector('#inflation-chart');
+  const drawInflation = () => drawLineChart(
+    inflationCanvas,
+    INFLATION_DECEMBER.map((p) => ({ label: String(p.year), value: p.value })),
+    { color: AMBER, unit: '%', decimals: 2 },
+  );
+  drawInflation();
+  onResizeRedraw(drawInflation);
 }
